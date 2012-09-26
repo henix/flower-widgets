@@ -1,0 +1,25 @@
+.flower-dialog {
+	position: absolute;
+	z-index: 1000;
+	background-color: #eee;
+}
+.flower-dialog-title {
+	padding: 0.5em;
+	background-color: #ddd;
+}
+a.flower-dialog-close {
+	text-decoration: none;
+	float: right;
+	display: block;
+	width: 14pt;
+	height: 14pt;
+	text-align: center;
+	vertical-align: center;
+	background-color: white;
+}
+a.flower-dialog-close:hover {
+	background-color: #ccc;
+}
+.flower-dialog-body {
+	padding: 0.5em;
+}
