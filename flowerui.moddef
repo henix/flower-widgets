@@ -1,0 +1,14 @@
+dir FlowerUI flower-widgets {
+	*before_all: before_all.js
+
+	compiler:
+	compiler -> ::Base.Assert.present ::Base.Assert.notPresent ::Flower.string ::Base.Assert.isTrue ::Flower.domer
+
+	Template: template.js
+
+	Dialog: dialog.js dialog.css
+	Dialog -> ::Flower.eventer.addEventListener ::Flower.eventer.preventDefault ::Flower.domer
+
+	Arrows: arrows.js arrows.css
+	Arrows -> ::Base.ecma5.Array-map ::Flower.ieVersion ::Base.Assert.present ::Base.Assert.between ::Flower.domer
+}

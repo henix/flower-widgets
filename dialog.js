@@ -1,7 +1,3 @@
-if (typeof FlowerUI === 'undefined') {
-	var FlowerUI = {};
-}
-
 (function() {
 
 function Dialog(body, title) {
@@ -20,10 +16,10 @@ function Dialog(body, title) {
 			closeBut.className = 'flower-dialog-close';
 			closeBut.innerHTML = '&times;';
 			var this1 = this; // to make a closure
-			eventer.addEventListener(closeBut, 'click', function(e) {
+			Flower.eventer.addEventListener(closeBut, 'click', function(e) {
 				e = e || window.event;
 				this1.close.call(this1);
-				eventer.preventDefault(e);
+				Flower.eventer.preventDefault(e);
 			});
 			titleDiv.appendChild(closeBut);
 		} while(false);
@@ -51,8 +47,8 @@ function Dialog(body, title) {
 Dialog.prototype.show = function() {
 	this.elem.style.width = this.width ? this.width + 'px' : 'auto';
 	this.elem.style.height = this.height ? this.height + 'px' : 'auto';
-	this.elem.style.left = ((domer.viewWidth() - (this.width || 200)) / 2) + 'px';
-	this.elem.style.top = ((domer.viewHeight() - (this.height || 200)) / 2) + 'px';
+	this.elem.style.left = ((Flower.domer.viewWidth() - (this.width || 200)) / 2) + 'px';
+	this.elem.style.top = ((Flower.domer.viewHeight() - (this.height || 200)) / 2) + 'px';
 	this.elem.style.display = 'block';
 };
 
