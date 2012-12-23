@@ -6,6 +6,9 @@ dir FlowerUI flower-widgets {
 
 	Template: template.js
 
+	Renderer: renderer.js
+	Renderer -> ::Base.Assert.present
+
 	Dialog: dialog.js dialog.css
 	Dialog -> ::Flower.eventer.addEventListener ::Flower.eventer.preventDefault ::Flower.domer
 

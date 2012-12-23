@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Renderer Test</title>
+</head>
+<body>
+
+<p data-name="clockPanel" data-class="FlowerUI.Renderer">{{year}}-{{month}}-{{day}} {{hour}}:{{minute}}:{{second}}</p>
+
+<script type="text/javascript" src="https://raw.github.com/janl/mustache.js/master/mustache.js"></script>
+<script type="text/javascript" src="../dist/flowerui.js"></script>
+
+<script type="text/javascript">
+var $ = FlowerUI.compileAll();
+
+$.clockPanel.render_func = Mustache.render;
+
+function updateClock() {
+	var now = new Date();
+	var t = {
+		year: now.getFullYear(),
+		month: now.getMonth(),
+		day: now.getDate(),
+		hour: now.getHours(),
+		minute: now.getMinutes(),
+		second: now.getSeconds()
+	};
+	$.clockPanel.repaint(t);
+}
+
+setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
