@@ -37,7 +37,16 @@ Arrows.prototype.drawArrow = function(x1, y1, x2, y2, color) {
 	}
 
 	// IE support CSS3 transform since IE9, for IE6-8, use Matrix filter instead
-	div.style.cssText = 'width:' + l + 'px;left:' + x1 + 'px;top:' + y1 + 'px;' + ((ie && (ie < 9)) ? genMatrixFilter(deg) : genTransformRotate(deg)); 
+	var fleft = x1;
+	var ftop = y1;
+	if (ie && ie < 9) {
+		fleft = Math.min(x1, x2) - 3;
+		if (ie == 6) {
+			fleft -= 3;
+		}
+		ftop = Math.min(y1, y2) + 3;
+	}
+	div.style.cssText = 'width:' + l + 'px;left:' + fleft + 'px;top:' + ftop + 'px;' + ((ie && (ie < 9)) ? genMatrixFilter(deg) : genTransformRotate(deg));
 
 	this.cont.appendChild(div);
 

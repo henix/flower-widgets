@@ -9,18 +9,22 @@
 .box {
 	width: 75px;
 	height: 50px;
+	line-height: 50px;
 	text-align: center;
-	vertical-align: middle;
 	border: 1px solid black;
-	display: table-cell;
+	display: inline-block;
+	zoom: 1;
+	*display: inline;
+	margin: 10px;
 }
 </style>
 </head>
 <body>
 
-<div class="box" data-name="b1">test</div>
-<p>&nbsp;</p>
-<div class="box" data-name="b2">test</div>
+<div class="box" data-name="b1">b1</div>
+<div class="box" data-name="b3">b3</div>
+<br />
+<div class="box" data-name="b2">b2</div>
 
 <div data-name="arrows" data-class="FlowerUI.Arrows"></div>
 
@@ -29,6 +33,8 @@
 <script type="text/javascript">
 var $ = FlowerUI.compileAll();
 $.arrows.arrow($.b1, 'l', $.b2, 'br');
+$.arrows.arrow($.b2, 'tl', $.b3, 'bl');
+$.arrows.arrow($.b3, 'tr', $.b2, 'r');
 </script>
 
 </body>
