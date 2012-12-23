@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Arrows Test</title>
+<link rel="stylesheet" href="../arrows.css" />
+<style type="text/css">
+.box {
+	width: 75px;
+	height: 50px;
+	text-align: center;
+	vertical-align: middle;
+	border: 1px solid black;
+	display: table-cell;
+}
+</style>
+</head>
+<body>
+
+<div class="box" data-name="b1">test</div>
+<p>&nbsp;</p>
+<div class="box" data-name="b2">test</div>
+
+<div data-name="arrows" data-class="FlowerUI.Arrows"></div>
+
+<script type="text/javascript" src="../dist/flowerui.js"></script>
+
+<script type="text/javascript">
+var $ = FlowerUI.compileAll();
+$.arrows.arrow($.b1, 'l', $.b2, 'br');
+</script>
+
+</body>
+</html>
