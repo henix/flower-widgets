@@ -57,12 +57,12 @@ var VFACTOR = {'t':0,'c':0.5,'b':1};
 var HFACTOR = {'l':0,'c':0.5,'r':1};
 
 function getHOffset(c) {
-	Assert.present(HFACTOR[c]);
+	Assert.present(HFACTOR[c], 'Invalid horizontal position: "' + c + '", must be one of [lcr]');
 	return HFACTOR[c];
 }
 
 function getVOffset(c) {
-	Assert.present(VFACTOR[c]);
+	Assert.present(VFACTOR[c], 'Invalid vertical position: "' + c + '", must be one of [tcb]');
 	return VFACTOR[c];
 }
 
@@ -75,7 +75,7 @@ function getFactors(str) {
 		} else if (HFACTOR.hasOwnProperty(str)) {
 			return {h: getHOffset(str), v: getVOffset('c')};
 		} else {
-			Assert.fail(str);
+			Assert.fail('Invalid position: ' + str);
 		}
 	}
 }
@@ -91,8 +91,8 @@ function getFactors(str) {
  * * ...
  */
 Arrows.prototype.arrow = function(elem1, pos1, elem2, pos2, color) {
-	Assert.between(pos1.length, 1, 2);
-	Assert.between(pos2.length, 1, 2);
+	Assert.between(pos1.length, 1, 2, pos1);
+	Assert.between(pos2.length, 1, 2, pos2);
 
 	pos1 = pos1.toLowerCase();
 	pos2 = pos2.toLowerCase();
