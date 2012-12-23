@@ -4,7 +4,6 @@ function Renderer(elem) {
 	this.render_func = null;
 	this.elem = elem;
 	this.tmpl = elem.outerHTML;
-	elem.style.display = 'none';
 }
 
 Renderer.prototype.repaint = function(data) {
