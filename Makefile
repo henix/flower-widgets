@@ -4,7 +4,7 @@
 
 NAME=flowerui
 
-all: $(NAME).js $(NAME).css
+all: dist/$(NAME).js dist/$(NAME).css
 
 dist/$(NAME).js: $(NAME).js $(NAME).moddef
 	mkdir -p dist
