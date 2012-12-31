@@ -1,157 +1,14 @@
-;
-var FlowerUI = {};
-;
-(function() {
-function Template(elem) {
-	this.content = elem.innerHTML;
-}
-FlowerUI.Template = Template;
-})();
-;
-var Flower = { _version: '0.1' };
-;
-Flower.domer = {
-	getText: function(node) {
-		return node.textContent || node.innerText || '';
-	},
-	hasAttribute: function(element, name) {
-		if (element.hasAttribute) {
-			return element.hasAttribute(name);
-		} else { // IE 6 7
-			return element.getAttribute(name) !== null;
-		}
-	},
-	offset: function (obj) {
-		if (typeof obj.getBoundingClientRect !== "undefined") {
-			// https://github.com/jquery/jquery/blob/master/src/offset.js
-			var rect = obj.getBoundingClientRect();
-			var docElem = document.documentElement;
-			return {
-				left: rect.left + (window.pageXOffset || docElem.scrollLeft) - (docElem.clientLeft || 0),
-				top: rect.top + (window.pageYOffset || docElem.scrollTop) - (docElem.clientTop || 0)
-			};
-		} else {
-			// http://www.quirksmode.org/js/findpos.html
-			var curleft = 0;
-			var curtop = 0;
-			if (obj.offsetParent) {
-				do {
-					curleft += obj.offsetLeft;
-					curtop += obj.offsetTop;
-					obj = obj.offsetParent;
-				} while(obj);
-			}
-			return {'left':curleft,'top':curtop};
-		}
-	},
-	viewWidth: function() {
-		return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0;
-	},
-	viewHeight: function() {
-		return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0;
-	}
-};
-;
-Flower.eventer = {};
-;
-Flower.eventer.preventDefault = function(e) {
-	if (typeof e.preventDefault === 'function') {
-		e.preventDefault();
-		e.stopPropagation();
-	} else {
-		e.returnValue = false;
-		e.cancelBubble = true;
-	}
-};
-;
-if (document.body.addEventListener) {
-	Flower.eventer.addEventListener = function(target, eventType, handler) {
-		target.addEventListener(eventType, handler, false);
-	};
-	Flower.eventer.removeEventListener = function(target, eventType, handler) {
-		target.removeEventListener(eventType, handler);
-	};
-} else {
-	Flower.eventer.addEventListener = function(target, eventType, handler) {
-		target.attachEvent('on' + eventType, handler);
-	};
-	Flower.eventer.removeEventListener = function(target, eventType, handler) {
-		target.detachEvent('on' + eventType, handler);
-	};
-}
-;
 (function() {
 
-function Dialog(body, title) {
-	this.elem = document.createElement('div');
-	this.elem.className = 'flower-dialog';
-	this.elem.style.display = 'none';
-
-	do {
-		var titleDiv = document.createElement('div');
-		titleDiv.className = 'flower-dialog-title';
-		titleDiv.innerHTML = title || 'Dialog';
-
-		do {
-			var closeBut = document.createElement('a');
-			closeBut.href = 'javascript:;';
-			closeBut.className = 'flower-dialog-close';
-			closeBut.innerHTML = '&times;';
-			var this1 = this; // to make a closure
-			Flower.eventer.addEventListener(closeBut, 'click', function(e) {
-				e = e || window.event;
-				this1.close.call(this1);
-				Flower.eventer.preventDefault(e);
-			});
-			titleDiv.appendChild(closeBut);
-		} while(false);
-
-		this.elem.appendChild(titleDiv);
-	} while(false);
-
-	do {
-		if (body.parentNode) { // remove body from dom
-			body.parentNode.removeChild(body);
-		}
-		var bodyCont = document.createElement('div');
-		bodyCont.className = 'flower-dialog-body';
-		bodyCont.appendChild(body);
-		this.elem.appendChild(bodyCont);
-	} while(false);
-
-	document.body.appendChild(this.elem);
-
-	this.close = function() { // default close event handler
-		this.hide();
-	};
-}
-
-Dialog.prototype.show = function() {
-	this.elem.style.width = this.width ? this.width + 'px' : 'auto';
-	this.elem.style.height = this.height ? this.height + 'px' : 'auto';
-	this.elem.style.left = ((Flower.domer.viewWidth() - (this.width || 200)) / 2) + 'px';
-	this.elem.style.top = ((Flower.domer.viewHeight() - (this.height || 200)) / 2) + 'px';
-	this.elem.style.display = 'block';
-};
-
-Dialog.prototype.hide = function() {
-	this.elem.style.display = 'none';
-};
-
-// TODO: draggable
-
-FlowerUI.Dialog = Dialog;
-
-})();
 ;
 function AssertError(msg) {
-	this.name = 'AssertError';
 	this.message = msg;
 }
 AssertError.prototype = new Error();
 AssertError.prototype.constructor = AssertError;
+AssertError.prototype.name = 'AssertError';
 
-Assert = {
+var Assert = {
 	fail: function(msg) {
 		throw new AssertError(msg);
 	}
@@ -164,33 +21,34 @@ Assert.present = function(obj, msg) {
 	}
 };
 ;
-Assert.between = function(actuall, start, end, msg) {
-	if ((actuall < start) || (actuall > end)) {
-		msg = msg ? ': ' + msg : '';
-		Assert.fail(actuall + ' is not between [' + start + ',' + end + ']' + msg);
-	}
+var FlowerUI = {};
+;
+(function () {
+
+function Renderer(elem) {
+	this.render_func = null;
+	this.elem = elem;
+	this.tmpl = elem.outerHTML;
+}
+
+Renderer.prototype.repaint = function(data) {
+	Assert.present(this.render_func, 'must set render_func before repaint');
+	var div = document.createElement('div');
+	div.innerHTML = this.render_func(this.tmpl, data);
+	var child = div.removeChild(div.children[0]);
+	this.elem.parentNode.replaceChild(child, this.elem);
+	this.elem = child;
 };
+
+FlowerUI.Renderer = Renderer;
+
+})();
 ;
 (function() {
-
-var detectIE = function() {
-	if (detectIE.ieVersion !== undefined) {
-		return detectIE.ieVersion; // cached
-	}
-	var v = 3;
-	var div = document.createElement('div');
-	var ins = div.getElementsByTagName('i');
-
-	do {
-		v++;
-		div.innerHTML = '<!--[if gt IE ' + v + ']><i></i><![endif]-->';
-	} while(ins[0]);
-	detectIE.ieVersion = v > 4 ? v : null;
-	return detectIE.ieVersion;
-};
-
-Flower.ieVersion = detectIE;
-
+function Template(elem) {
+	this.content = elem.innerHTML;
+}
+FlowerUI.Template = Template;
 })();
 ;
 /**
@@ -271,6 +129,79 @@ if (!Array.prototype.map) {
 		return A;
 	};
 }
+;
+var Flower = {};
+;
+(function() {
+
+var detectIE = function() {
+	if (detectIE.ieVersion !== undefined) {
+		return detectIE.ieVersion; // cached
+	}
+	var v = 3;
+	var div = document.createElement('div');
+	var ins = div.getElementsByTagName('i');
+
+	do {
+		v++;
+		div.innerHTML = '<!--[if gt IE ' + v + ']><i></i><![endif]-->';
+	} while(ins[0]);
+	detectIE.ieVersion = v > 4 ? v : null;
+	return detectIE.ieVersion;
+};
+
+Flower.ieVersion = detectIE;
+
+})();
+;
+Assert.between = function(actuall, start, end, msg) {
+	if ((actuall < start) || (actuall > end)) {
+		msg = msg ? ': ' + msg : '';
+		Assert.fail(actuall + ' is not between [' + start + ',' + end + ']' + msg);
+	}
+};
+;
+Flower.domer = {
+	getText: function(node) {
+		return node.textContent || node.innerText || '';
+	},
+	hasAttribute: function(element, name) {
+		if (element.hasAttribute) {
+			return element.hasAttribute(name);
+		} else { // IE 6 7
+			return element.getAttribute(name) !== null;
+		}
+	},
+	offset: function (obj) {
+		if (typeof obj.getBoundingClientRect !== "undefined") {
+			// https://github.com/jquery/jquery/blob/master/src/offset.js
+			var rect = obj.getBoundingClientRect();
+			var docElem = document.documentElement;
+			return {
+				left: rect.left + (window.pageXOffset || docElem.scrollLeft) - (docElem.clientLeft || 0),
+				top: rect.top + (window.pageYOffset || docElem.scrollTop) - (docElem.clientTop || 0)
+			};
+		} else {
+			// http://www.quirksmode.org/js/findpos.html
+			var curleft = 0;
+			var curtop = 0;
+			if (obj.offsetParent) {
+				do {
+					curleft += obj.offsetLeft;
+					curtop += obj.offsetTop;
+					obj = obj.offsetParent;
+				} while(obj);
+			}
+			return {'left':curleft,'top':curtop};
+		}
+	},
+	viewWidth: function() {
+		return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0;
+	},
+	viewHeight: function() {
+		return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0;
+	}
+};
 ;
 (function() {
 
@@ -388,27 +319,111 @@ FlowerUI.Arrows = Arrows;
 
 })();
 ;
-(function () {
+Flower.eventer = {};
+;
+Flower.eventer.preventDefault = function(e) {
+	if (typeof e.preventDefault === 'function') {
+		e.preventDefault();
+		e.stopPropagation();
+	} else {
+		e.returnValue = false;
+		e.cancelBubble = true;
+	}
+};
+;
+if (document.body.addEventListener) {
+	Flower.eventer.addEventListener = function(target, eventType, handler) {
+		target.addEventListener(eventType, handler, false);
+	};
+	Flower.eventer.removeEventListener = function(target, eventType, handler) {
+		target.removeEventListener(eventType, handler);
+	};
+} else {
+	Flower.eventer.addEventListener = function(target, eventType, handler) {
+		target.attachEvent('on' + eventType, handler);
+	};
+	Flower.eventer.removeEventListener = function(target, eventType, handler) {
+		target.detachEvent('on' + eventType, handler);
+	};
+}
+;
+(function() {
 
-function Renderer(elem) {
-	this.render_func = null;
-	this.elem = elem;
-	this.tmpl = elem.outerHTML;
-	elem.style.display = 'none';
+function Dialog(body, title) {
+	this.elem = document.createElement('div');
+	this.elem.className = 'flower-dialog';
+	this.elem.style.display = 'none';
+
+	do {
+		var titleDiv = document.createElement('div');
+		titleDiv.className = 'flower-dialog-title';
+		titleDiv.innerHTML = title || 'Dialog';
+
+		do {
+			var closeBut = document.createElement('a');
+			closeBut.href = 'javascript:;';
+			closeBut.className = 'flower-dialog-close';
+			closeBut.innerHTML = '&times;';
+			var this1 = this; // to make a closure
+			Flower.eventer.addEventListener(closeBut, 'click', function(e) {
+				e = e || window.event;
+				this1.close.call(this1);
+				Flower.eventer.preventDefault(e);
+			});
+			titleDiv.appendChild(closeBut);
+		} while(false);
+
+		this.elem.appendChild(titleDiv);
+	} while(false);
+
+	do {
+		if (body.parentNode) { // remove body from dom
+			body.parentNode.removeChild(body);
+		}
+		var bodyCont = document.createElement('div');
+		bodyCont.className = 'flower-dialog-body';
+		bodyCont.appendChild(body);
+		this.elem.appendChild(bodyCont);
+	} while(false);
+
+	document.body.appendChild(this.elem);
+
+	this.close = function() { // default close event handler
+		this.hide();
+	};
 }
 
-Renderer.prototype.repaint = function(data) {
-	Assert.present(this.render_func, 'must set render_func before repaint');
-	var div = document.createElement('div');
-	div.innerHTML = this.render_func(this.tmpl, data);
-	var child = div.removeChild(div.children[0]);
-	this.elem.parentNode.replaceChild(child, this.elem);
-	this.elem = child;
+Dialog.prototype.show = function() {
+	this.elem.style.width = this.width ? this.width + 'px' : 'auto';
+	this.elem.style.height = this.height ? this.height + 'px' : 'auto';
+	this.elem.style.left = ((Flower.domer.viewWidth() - (this.width || 200)) / 2) + 'px';
+	this.elem.style.top = ((Flower.domer.viewHeight() - (this.height || 200)) / 2) + 'px';
+	this.elem.style.display = 'block';
 };
 
-FlowerUI.Renderer = Renderer;
+Dialog.prototype.hide = function() {
+	this.elem.style.display = 'none';
+};
+
+// TODO: draggable
+
+FlowerUI.Dialog = Dialog;
 
 })();
+;
+Assert.notPresent = function(obj, msg) {
+	if ((typeof obj !== 'undefined') && (obj !== null)) {
+		msg = msg ? ': ' + msg : '';
+		Assert.fail('object is present' + msg);
+	}
+};
+;
+Assert.isTrue = function(cond, msg) {
+	if (cond !== true) {
+		msg = msg ? ': ' + msg : '';
+		Assert.fail('condition ' + cond + ' is not true' + msg);
+	}
+};
 ;
 Flower.string = {
 	/* see http://stackoverflow.com/questions/646628/javascript-startswith */
@@ -424,20 +439,6 @@ Flower.string = {
 			return str.substring(0, str.length - suffix.length);
 		}
 		return str;
-	}
-};
-;
-Assert.notPresent = function(obj, msg) {
-	if ((typeof obj !== 'undefined') && (obj !== null)) {
-		msg = msg ? ': ' + msg : '';
-		Assert.fail('object is present' + msg);
-	}
-};
-;
-Assert.isTrue = function(cond, msg) {
-	if (cond !== true) {
-		msg = msg ? ': ' + msg : '';
-		Assert.fail('condition ' + cond + ' is not true' + msg);
 	}
 };
 ;
@@ -512,3 +513,17 @@ FlowerUI.compileAll = compileAll;
 
 })();
 ;
+
+if (typeof exports !== 'undefined') {
+	if (typeof module !== 'undefined' && module.exports) {
+		exports = module.exports = FlowerUI;
+	}
+} else if (typeof define === 'function') {
+	define(function () {
+		return FlowerUI;
+	});
+} else {
+	window.FlowerUI = FlowerUI;
+}
+
+})();
