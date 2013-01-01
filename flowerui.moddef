@@ -15,7 +15,7 @@ dir FlowerUI flower-widgets {
 	Dialog -> ::Flower.eventer.addEventListener ::Flower.eventer.preventDefault ::Flower.domer
 
 	Combobox: combobox.js combobox.css
-	Combobox -> ::Base.Assert.equalsIgnoreCase ::Base.Assert.notEmpty
+	Combobox -> ::Base.Assert.equalsIgnoreCase ::Base.Assert.notEmpty ::Base.Strings.escapeHtml
 	Combobox -> ::CSV
 	Combobox -> ::Flower.eventer.addEventListener ::Flower.ie.version ::Flower.ie.hoverClass
 
