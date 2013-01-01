@@ -1,428 +1,13 @@
 (function() {
 
 ;
-var Flower = {};
-;
-Flower.csser = {
-	prependSheet: function(ruleString) {
-		this.insertSheet(ruleString, true);
-	},
-	insertSheet: function(ruleString, atstart) {
-		var head = document.getElementsByTagName('head')[0];
-		var style = document.createElement('style');
-		var rules = document.createTextNode(ruleString);
-		style.type = 'text/css';
-		if(style.styleSheet) {
-			style.styleSheet.cssText = rules.nodeValue;
-		} else {
-			style.appendChild(rules);
-		}
-		if (atstart) {
-			head.insertBefore(style, head.children[0]);
-		} else {
-			head.appendChild(style);
-		}
-	},
-	addClass: function(e, name) {
-		if (!this.hasClass(e, name)) {
-			e.className += (' ' + name);
-		}
-	},
-	removeClass: function(e, name) {
-		e.className = e.className.replace(new RegExp('(^|\\s+)' + name + '(?=\\s|$)', 'gm'), ''); // zero-width assertion
-	},
-	hasClass: function(e, name) {
-		/* NOTE: class names are case sensitive: http://devedge-temp.mozilla.org/viewsource/2001/css-class-id/ */
-		return e.className.match(new RegExp('(^|\\s)' + name + '(\\s|$)', 'gm')) !== null;
-	}
-};
-;
-Flower.eventer = {};
-;
-if (document.body.addEventListener) {
-	Flower.eventer.addEventListener = function(target, eventType, handler) {
-		target.addEventListener(eventType, handler, false);
-	};
-	Flower.eventer.removeEventListener = function(target, eventType, handler) {
-		target.removeEventListener(eventType, handler);
-	};
-} else {
-	Flower.eventer.addEventListener = function(target, eventType, handler) {
-		target.attachEvent('on' + eventType, handler);
-	};
-	Flower.eventer.removeEventListener = function(target, eventType, handler) {
-		target.detachEvent('on' + eventType, handler);
-	};
-}
-;
-Flower.ie = {};
-;
-/**
- * For IE6 doesn't support :hover on any element
- */
-Flower.ie.hoverClass = function(elem, className) {
-	Assert.present(elem, 'missing elem in ie.hoverClass()');
-	Assert.present(className, 'missing className in ie.hoverClass()');
-
-	Flower.eventer.addEventListener(elem, 'mouseenter', function() {
-		Flower.csser.addClass(elem, className);
-	});
-
-	Flower.eventer.addEventListener(elem, 'mouseleave', function() {
-		Flower.csser.removeClass(elem, className);
-	});
-};
-;
-function AssertError(msg) {
-	this.message = msg;
-}
-AssertError.prototype = new Error();
-AssertError.prototype.constructor = AssertError;
-AssertError.prototype.name = 'AssertError';
-
-var Assert = {
-	fail: function(msg) {
-		throw new AssertError(msg);
-	}
-};
-;
-Assert.notEmpty = function(str, msg) {
-	if (str.length === 0) {
-		msg = msg ? ': ' + msg : '';
-		Assert.fail('string is empty' + msg);
-	}
-};
-;
-Assert.equalsIgnoreCase = function(actuall, expected, msg) {
-	if (actuall.toLowerCase() !== expected.toLowerCase()) {
-		msg = msg ? ': ' + msg : '';
-		Assert.fail(actuall + ' !=(ignore case) ' + expected + ' (expected)' + msg);
-	}
-};
-;
-/**
- * Could be:
- * * undefined: not deteced yet
- * * null: detected, not IE
- * * number: ie version
- */
-Flower.ie.ieVersion = undefined;
-Flower.ie.version = function() {
-	if (this.ieVersion !== undefined) {
-		return this.ieVersion; // cached
-	}
-	var v = 3;
-	var div = document.createElement('div');
-	var ins = div.getElementsByTagName('i');
-	do {
-		v++;
-		div.innerHTML = '<!--[if gt IE ' + v + ']><i></i><![endif]-->';
-	} while (ins[0]);
-	this.ieVersion = v > 4 ? v : null;
-	return this.ieVersion;
-};
-;
-/**
- * csv.js
- *
- * https://github.com/henix/csv.js
- *
- * License: MIT License
- */
-(function() {
-
-var CSV = {
-	DefaultOptions: {
-		delim: ',',
-		quote: '"',
-		rowdelim: '\n'
-	}
-};
-
-function CSVSyntaxError(msg) {
-	this.message = msg;
-	if (Error.captureStackTrace) {
-		Error.captureStackTrace(this, arguments.callee);
-	}
-}
-CSVSyntaxError.prototype = new Error();
-CSVSyntaxError.prototype.constructor = CSVSyntaxError;
-CSVSyntaxError.prototype.name = 'CSVSyntaxError';
-
-function CSVParser(str, options) {
-	this.str = str;
-	this.options = CSV.DefaultOptions;
-	if (options) {
-		options.delim = options.delim || CSV.DefaultOptions.delim;
-		options.quote = options.quote || CSV.DefaultOptions.quote;
-		options.rowdelim = options.rowdelim || CSV.DefaultOptions.rowdelim;
-		this.options = options;
-	}
-
-	this.pos = 0;
-	this.endpos = str.length;
-
-	this.lineNo = 1;
-}
-
-CSVParser.prototype.next = function(s) {
-	if (this.pos < this.endpos) {
-		var len = s.length;
-		if (this.str.substring(this.pos, this.pos + len) == s) {
-			this.pos += len;
-			return true;
-		}
-	}
-	return false;
-};
-
-CSVParser.prototype.ahead = function(s) {
-	if (this.pos < this.endpos) {
-		var len = s.length;
-		if (this.str.substring(this.pos, this.pos + len) == s) {
-			return true;
-		}
-	}
-	return false;
-};
-
-CSVParser.prototype.nextAny = function() {
-	if (this.pos <= this.endpos) {
-		this.pos++;
-		return true;
-	}
-	return false;
-};
-
-CSVParser.prototype.charInQuote = function(s) {
-	var mark = this.pos;
-	if (!this.ahead(this.options.quote)) {
-		if (this.nextAny()) {
-			if (this.str.charAt(this.pos - 1) == '\n') {
-				this.lineNo++;
-			}
-			return true;
-		}
-	} else if (this.next(this.options.quote + this.options.quote)) {
-		return true;
-	}
-	this.pos = mark;
-	return false;
-};
-
-CSVParser.prototype.quotedField = function() {
-	var mark = this.pos;
-	if (!this.next(this.options.quote)) { this.pos = mark; return null; }
-	var begin = this.pos;
-	while (this.charInQuote()) ;
-	if (!this.next(this.options.quote)) { this.pos = mark; return null; }
-	return this.str.substring(begin, this.pos - 1).replace(this.options.quote + this.options.quote, this.options.quote);
-};
-
-CSVParser.prototype.normalField = function() {
-	var begin = this.pos;
-	while (!(this.ahead(this.options.delim) || this.ahead(this.options.rowdelim)) && this.nextAny()) ;
-	return this.str.substring(begin, this.pos);
-};
-
-CSVParser.prototype.nextField = function() {
-	var tmp = this.quotedField();
-	if (tmp !== null) return tmp;
-	return this.normalField();
-};
-
-CSVParser.prototype.nextRow_0 = function() {
-	var mark = this.pos;
-	if (!this.next(this.options.delim)) { this.pos = mark; return null; }
-	var tmp = this.nextField();
-	if (tmp === null) { this.pos = mark; return null; }
-	return tmp;
-};
-
-/**
- * @return String[]
- * @throws CSVSyntaxError
- */
-CSVParser.prototype.nextRow = function() {
-	var ar = [];
-	var mark = this.pos;
-	var tmp = this.nextField();
-	if (tmp === null) { this.pos = mark; return null; }
-	ar.push(tmp);
-	tmp = this.nextRow_0();
-	while (tmp !== null) {
-		ar.push(tmp);
-		tmp = this.nextRow_0();
-	}
-	if (!(this.next(this.options.rowdelim) || !this.ahead(''))) { throw new CSV.CSVSyntaxError('line ' + this.lineNo + ': ' + this.str.substring(Math.max(this.pos - 5, 0), this.pos + 5)); this.pos = mark; return null; }
-	if (this.str.charAt(this.pos - 1) == '\n') {
-		this.lineNo++;
-	}
-	return ar;
-};
-
-/**
- * @return boolean
- */
-CSVParser.prototype.hasNext = function() {
-	return this.ahead('');
-};
-
-CSV.CSVSyntaxError = CSVSyntaxError;
-CSV.CSVParser = CSVParser;
-
-/**
- * @return String[] or null
- */
-CSV.parseOne = function(str, options) {
-	var parser = new CSV.CSVParser(str, options);
-	if (parser.hasNext()) {
-		return parser.nextRow();
-	}
-	return null;
-};
-
-/**
- * @return String[][]
- */
-CSV.parse = function(str, options) {
-	var parser = new CSV.CSVParser(str, options);
-	var all = [];
-	while (parser.hasNext()) {
-		var ar = parser.nextRow();
-		all.push(ar);
-	}
-	return all;
-};
-
-/**
- * @param rows String[][]
- * @param colnames String[]
- * @return Object[]
- */
-CSV.bindColumns = function(rows, colnames) {
-	if (!colnames) {
-		colnames = rows.shift();
-	}
-	return rows.map(function(row) {
-		var obj = {};
-		for (var i = 0; i < row.length; i++) {
-			obj[colnames[i]] = row[i];
-		}
-		return obj;
-	});
-};
-
-/**
- * https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/map
- */
-if (!Array.prototype.map) {
-	Array.prototype.map = function(callback, thisArg) {
-		var T, A, k;
-		if (this === null) {
-			throw new TypeError(" this is null or not defined");
-		}
-		var O = Object(this);
-		var len = O.length >>> 0;
-		if ({}.toString.call(callback) != "[object Function]") {
-			throw new TypeError(callback + " is not a function");
-		}
-		if (thisArg) {
-			T = thisArg;
-		}
-		A = new Array(len);
-		k = 0;
-		while(k < len) {
-			var kValue, mappedValue;
-			if (k in O) {
-				kValue = O[ k ];
-				mappedValue = callback.call(T, kValue, k, O);
-				A[ k ] = mappedValue;
-			}
-			k++;
-		}
-		return A;
-	};
-}
-
-// exports
-if (typeof exports !== 'undefined') {
-	if (typeof module !== 'undefined' && module.exports) {
-		exports = module.exports = CSV;
-	}
-} else if (typeof define === 'function') {
-	define(function () {
-		return CSV;
-	});
-} else {
-	window.CSV = CSV;
-}
-
-})();
-;
 var FlowerUI = {};
 ;
 (function() {
-
-function Combobox(elem) {
-	Assert.equalsIgnoreCase(elem.tagName, 'input', 'Combobox must be used with an input');
-	this.input = elem;
-
-	Assert.notEmpty(elem.value, 'You must fill input\'s value with CSV format value list');
-	var values = CSV.parseOne(elem.value);
-	elem.value = '';
-	var ul = document.createElement('ul');
-	for (var i = 0; i < values.length; i++) {
-		var li = document.createElement('li');
-		li.innerHTML = values[i];
-		ul.appendChild(li);
-	}
-	this.datalist = ul;
+function Template(elem) {
+	this.content = elem.innerHTML;
 }
-Combobox.prototype.showOptions = function() {
-	this.datalist.style.display = '';
-};
-Combobox.prototype.hideOptions = function() {
-	this.datalist.style.display = 'none';
-};
-Combobox.prototype.init = function() {
-	var this1 = this;
-	(function() { // create a container div and replace
-		var div = document.createElement('div');
-		div.className = 'flower-combobox';
-		var input = this1.input.cloneNode(false);
-		div.appendChild(input);
-		div.appendChild(this1.datalist);
-		this1.input.parentNode.replaceChild(div, this1.input);
-		this1.input = input;
-		this1.elem = div;
-	})();
-	this.hideOptions();
-	Flower.eventer.addEventListener(this.input, 'focus', function(e) {
-		this1.showOptions();
-	});
-	Flower.eventer.addEventListener(this.input, 'blur', function(e) {
-		setTimeout(function(){this1.hideOptions();}, 100); // delay, otherwise can't trigger click
-	});
-	Flower.eventer.addEventListener(this.datalist, 'click', function(e) {
-		e = e || window.event;
-		var target = e.target || e.srcElement;
-		if (target.tagName.toUpperCase() == 'LI') {
-			this1.input.value = target.innerHTML;
-		}
-		this1.hideOptions(); // in IE, click don't trigger blur
-	});
-
-	var ie = Flower.ie.version();
-	if (ie && ie < 7) {
-		for (var i = 0; i < this.datalist.children.length; i++) {
-			Flower.ie.hoverClass(this.datalist.children[i], 'flower-hover');
-		}
-	}
-};
-
-FlowerUI.Combobox = Combobox;
-
+FlowerUI.Template = Template;
 })();
 ;
 (function() {
@@ -486,6 +71,54 @@ Cards.prototype.init = function() {
 FlowerUI.Cards = Cards;
 
 })();
+;
+function AssertError(msg) {
+	this.message = msg;
+}
+AssertError.prototype = new Error();
+AssertError.prototype.constructor = AssertError;
+AssertError.prototype.name = 'AssertError';
+
+var Assert = {
+	fail: function(msg) {
+		throw new AssertError(msg);
+	}
+};
+;
+Assert.present = function(obj, msg) {
+	if ((typeof obj === 'undefined') || (obj === null)) {
+		msg = msg ? ': ' + msg : '';
+		Assert.fail('object null or undefined' + msg);
+	}
+};
+;
+(function () {
+
+function Renderer(elem) {
+	this.render_func = null;
+	this.elem = elem;
+	this.tmpl = elem.outerHTML;
+}
+
+Renderer.prototype.repaint = function(data) {
+	Assert.present(this.render_func, 'must set render_func before repaint');
+	var div = document.createElement('div');
+	div.innerHTML = this.render_func(this.tmpl, data);
+	var child = div.removeChild(div.children[0]);
+	this.elem.parentNode.replaceChild(child, this.elem);
+	this.elem = child;
+};
+
+FlowerUI.Renderer = Renderer;
+
+})();
+;
+Assert.between = function(actuall, start, end, msg) {
+	if ((actuall < start) || (actuall > end)) {
+		msg = msg ? ': ' + msg : '';
+		Assert.fail(actuall + ' is not between [' + start + ',' + end + ']' + msg);
+	}
+};
 ;
 /**
  * Array.map
@@ -566,6 +199,32 @@ if (!Array.prototype.map) {
 	};
 }
 ;
+var Flower = {};
+;
+Flower.ie = {};
+;
+/**
+ * Could be:
+ * * undefined: not deteced yet
+ * * null: detected, not IE
+ * * number: ie version
+ */
+Flower.ie.ieVersion = undefined;
+Flower.ie.version = function() {
+	if (this.ieVersion !== undefined) {
+		return this.ieVersion; // cached
+	}
+	var v = 3;
+	var div = document.createElement('div');
+	var ins = div.getElementsByTagName('i');
+	do {
+		v++;
+		div.innerHTML = '<!--[if gt IE ' + v + ']><i></i><![endif]-->';
+	} while (ins[0]);
+	this.ieVersion = v > 4 ? v : null;
+	return this.ieVersion;
+};
+;
 Flower.domer = {
 	getText: function(node) {
 		return node.textContent || node.innerText || '';
@@ -608,42 +267,6 @@ Flower.domer = {
 	}
 };
 ;
-Assert.between = function(actuall, start, end, msg) {
-	if ((actuall < start) || (actuall > end)) {
-		msg = msg ? ': ' + msg : '';
-		Assert.fail(actuall + ' is not between [' + start + ',' + end + ']' + msg);
-	}
-};
-;
-Assert.present = function(obj, msg) {
-	if ((typeof obj === 'undefined') || (obj === null)) {
-		msg = msg ? ': ' + msg : '';
-		Assert.fail('object null or undefined' + msg);
-	}
-};
-;
-(function() {
-
-var detectIE = function() {
-	if (detectIE.ieVersion !== undefined) {
-		return detectIE.ieVersion; // cached
-	}
-	var v = 3;
-	var div = document.createElement('div');
-	var ins = div.getElementsByTagName('i');
-
-	do {
-		v++;
-		div.innerHTML = '<!--[if gt IE ' + v + ']><i></i><![endif]-->';
-	} while(ins[0]);
-	detectIE.ieVersion = v > 4 ? v : null;
-	return detectIE.ieVersion;
-};
-
-Flower.ieVersion = detectIE;
-
-})();
-;
 (function() {
 
 function Arrows(element) {
@@ -666,7 +289,7 @@ function genMatrixFilter(deg) {
 }
 
 Arrows.prototype.drawArrow = function(x1, y1, x2, y2, color) {
-	var ie = Flower.ieVersion();
+	var ie = Flower.ie.version();
 
 	var div = document.createElement('div');
 	div.className = 'flower-arrow-cont';
@@ -760,135 +383,7 @@ FlowerUI.Arrows = Arrows;
 
 })();
 ;
-(function () {
-
-function Renderer(elem) {
-	this.render_func = null;
-	this.elem = elem;
-	this.tmpl = elem.outerHTML;
-}
-
-Renderer.prototype.repaint = function(data) {
-	Assert.present(this.render_func, 'must set render_func before repaint');
-	var div = document.createElement('div');
-	div.innerHTML = this.render_func(this.tmpl, data);
-	var child = div.removeChild(div.children[0]);
-	this.elem.parentNode.replaceChild(child, this.elem);
-	this.elem = child;
-};
-
-FlowerUI.Renderer = Renderer;
-
-})();
-;
-Assert.isTrue = function(cond, msg) {
-	if (cond !== true) {
-		msg = msg ? ': ' + msg : '';
-		Assert.fail('condition ' + cond + ' is not true' + msg);
-	}
-};
-;
-Flower.string = {
-	/* see http://stackoverflow.com/questions/646628/javascript-startswith */
-	/* benchmark: http://jsperf.com/js-startswith/6 */
-	startsWith: function(str, prefix) {
-		return str.lastIndexOf(prefix, 0) === 0;
-	},
-	endsWith: function(str, suffix) {
-		return str.indexOf(suffix, str.length - suffix.length) !== -1;
-	},
-	removeEnd: function(str, suffix) {
-		if (this.endsWith(str, suffix)) {
-			return str.substring(0, str.length - suffix.length);
-		}
-		return str;
-	}
-};
-;
-Assert.notPresent = function(obj, msg) {
-	if ((typeof obj !== 'undefined') && (obj !== null)) {
-		msg = msg ? ': ' + msg : '';
-		Assert.fail('object is present' + msg);
-	}
-};
-;
-(function() {
-
-/**
- * 处理具有 data-name 或 data-class 的 element：
- *
- * 1. 如果有 data-class ，则值为 new class(element)
- * 2. 否则值为此 element
- *
- * 然后将值用 data-name 保存到最近的具有 data-class 的祖先
- *
- * 也允许只有 data-class 但没有名字的匿名对象
- */
-function compileElement(parentObj, element) {
-	var name = element.getAttribute('data-name');
-	var klass = element.getAttribute('data-class');
-	var obj = null;
-	if (klass) {
-		obj = eval('new ' + klass + '(element)'); // FIXME: eval
-	}
-	if (name && parentObj) {
-		obj = obj || element;
-		if (Flower.string.endsWith(name, '[]')) { // 数组
-			name = Flower.string.removeEnd(name, '[]');
-			Assert.present(parentObj[name], 'parentObj.' + name);
-			parentObj[name].push(obj);
-		} else {
-			Assert.notPresent(parentObj[name], 'name conflict: ' + name);
-			parentObj[name] = obj;
-		}
-	}
-	var childs = element.children;
-	var len = childs.length;
-	var nextParent = klass ? obj : parentObj;
-	for (var i = 0; i < len; i++) {
-		compileElement(nextParent, childs[i]);
-	}
-	if (klass && obj && typeof obj.init === 'function') {
-		obj.init(); // trigger init event
-	}
-	if (klass) {
-		return obj;
-	}
-}
-
-/**
- * 编译一个具有 data-class 的 element（不一定有 data-name）
- */
-function compileUI(element) {
-	Assert.isTrue(Flower.domer.hasAttribute(element, 'data-class'), 'element must have data-class attribute');
-	// Flower.assert.isFalse(Flower.domer.hasAttribute(element, 'data-name'), 'element must not have data-name attribute');
-	/*var rootObj = eval('new ' + element.getAttribute('data-class') + '(element)'); // FIXME: eval
-	for (var i = 0; i < element.children.length; i++) {
-		compileElement(rootObj, element.children[i]);
-	}
-	if (typeof rootObj.init === 'function') {
-		rootObj.init(); // trigger init event
-	}
-	return rootObj;*/
-	return compileElement(null, element);
-}
-
-function compileAll(element) {
-	var obj = {};
-	compileElement(obj, element || document.body);
-	return obj;
-}
-
-FlowerUI.compileAll = compileAll;
-
-})();
-;
-(function() {
-function Template(elem) {
-	this.content = elem.innerHTML;
-}
-FlowerUI.Template = Template;
-})();
+Flower.eventer = {};
 ;
 Flower.eventer.preventDefault = function(e) {
 	if (typeof e.preventDefault === 'function') {
@@ -899,6 +394,22 @@ Flower.eventer.preventDefault = function(e) {
 		e.cancelBubble = true;
 	}
 };
+;
+if (document.body.addEventListener) {
+	Flower.eventer.addEventListener = function(target, eventType, handler) {
+		target.addEventListener(eventType, handler, false);
+	};
+	Flower.eventer.removeEventListener = function(target, eventType, handler) {
+		target.removeEventListener(eventType, handler);
+	};
+} else {
+	Flower.eventer.addEventListener = function(target, eventType, handler) {
+		target.attachEvent('on' + eventType, handler);
+	};
+	Flower.eventer.removeEventListener = function(target, eventType, handler) {
+		target.detachEvent('on' + eventType, handler);
+	};
+}
 ;
 (function() {
 
@@ -961,6 +472,523 @@ Dialog.prototype.hide = function() {
 // TODO: draggable
 
 FlowerUI.Dialog = Dialog;
+
+})();
+;
+Assert.notEmpty = function(str, msg) {
+	if (str.length === 0) {
+		msg = msg ? ': ' + msg : '';
+		Assert.fail('string is empty' + msg);
+	}
+};
+;
+var Strings = {};
+;
+(function() {
+
+var entityMap = {
+	"&": "&amp;",
+	"<": "&lt;",
+	">": "&gt;",
+	'"': '&quot;',
+	"'": '&#39;',
+	"/": '&#x2F;'
+};
+
+function escapeChar(c) {
+	return entityMap[c];
+}
+
+Strings.escapeHtml = function(str) {
+	return str.replace(/[&<>"'\/]/g, escapeChar);
+};
+
+})();
+;
+Flower.csser = {
+	prependSheet: function(ruleString) {
+		this.insertSheet(ruleString, true);
+	},
+	insertSheet: function(ruleString, atstart) {
+		var head = document.getElementsByTagName('head')[0];
+		var style = document.createElement('style');
+		var rules = document.createTextNode(ruleString);
+		style.type = 'text/css';
+		if(style.styleSheet) {
+			style.styleSheet.cssText = rules.nodeValue;
+		} else {
+			style.appendChild(rules);
+		}
+		if (atstart) {
+			head.insertBefore(style, head.children[0]);
+		} else {
+			head.appendChild(style);
+		}
+	},
+	addClass: function(e, name) {
+		if (!this.hasClass(e, name)) {
+			e.className += (' ' + name);
+		}
+	},
+	removeClass: function(e, name) {
+		e.className = e.className.replace(new RegExp('(^|\\s+)' + name + '(?=\\s|$)', 'gm'), ''); // zero-width assertion
+	},
+	hasClass: function(e, name) {
+		/* NOTE: class names are case sensitive: http://devedge-temp.mozilla.org/viewsource/2001/css-class-id/ */
+		return e.className.match(new RegExp('(^|\\s)' + name + '(\\s|$)', 'gm')) !== null;
+	}
+};
+;
+/**
+ * For IE6 doesn't support :hover on any element
+ */
+Flower.ie.hoverClass = function(elem, className) {
+	Assert.present(elem, 'missing elem in ie.hoverClass()');
+	Assert.present(className, 'missing className in ie.hoverClass()');
+
+	Flower.eventer.addEventListener(elem, 'mouseenter', function() {
+		Flower.csser.addClass(elem, className);
+	});
+
+	Flower.eventer.addEventListener(elem, 'mouseleave', function() {
+		Flower.csser.removeClass(elem, className);
+	});
+};
+;
+/**
+ * csv.js
+ *
+ * https://github.com/henix/csv.js
+ *
+ * License: MIT License
+ */
+(function() {
+
+var CSV = {
+	DefaultOptions: {
+		delim: ',',
+		quote: '"',
+		rowdelim: '\n'
+	}
+};
+
+function CSVSyntaxError(msg) {
+	this.message = msg;
+	if (Error.captureStackTrace) {
+		Error.captureStackTrace(this, arguments.callee);
+	}
+}
+CSVSyntaxError.prototype = new Error();
+CSVSyntaxError.prototype.constructor = CSVSyntaxError;
+CSVSyntaxError.prototype.name = 'CSVSyntaxError';
+
+function CSVParser(str, options) {
+	this.str = str;
+	this.options = CSV.DefaultOptions;
+	if (options) {
+		options.delim = options.delim || CSV.DefaultOptions.delim;
+		options.quote = options.quote || CSV.DefaultOptions.quote;
+		if (options.quote.length != 1) {
+			throw new RangeError('options.quote should be only 1 char');
+		}
+		options.rowdelim = options.rowdelim || CSV.DefaultOptions.rowdelim;
+		this.options = options;
+	}
+
+	this.pos = 0;
+	this.endpos = str.length;
+
+	this.lineNo = 1;
+}
+
+CSVParser.prototype.next = function(s) {
+	if (this.pos < this.endpos) {
+		var len = s.length;
+		if (this.str.substring(this.pos, this.pos + len) == s) {
+			this.pos += len;
+			return true;
+		}
+	}
+	return false;
+};
+
+CSVParser.prototype.ahead = function(s) {
+	if (this.pos < this.endpos) {
+		if (!s) {
+			return true;
+		}
+		var len = s.length;
+		if (this.str.substring(this.pos, this.pos + len) == s) {
+			return true;
+		}
+	}
+	return false;
+};
+
+function countMatches(str, patt) {
+	var count = 0;
+	var i = str.indexOf(patt);
+	while (i > 0) {
+		count++;
+		i = str.indexOf(patt, i + patt.length);
+	}
+	return count;
+}
+
+/**
+ * quotedField: '"' * ((1 - '"') + P'""')^0 * '"'
+ */
+CSVParser.prototype.quotedField = function() {
+	var mark = this.pos;
+	if (!this.next(this.options.quote)) { this.pos = mark; return null; }
+	var tmp = [];
+	var start = this.pos;
+	while (start < this.endpos) {
+		var end = this.str.indexOf(this.options.quote, start);
+		if (end < 0) {
+			throw new CSVSyntaxError('line ' + this.lineNo + ': missing close quote');
+		}
+		var part = this.str.substring(start, end);
+		this.lineNo += countMatches(part, '\n');
+		tmp.push(part);
+		if ((end + 1 < this.endpos) && (this.str[end + 1] == this.options.quote)) {
+			start = end + 2;
+			end = this.str.indexOf(this.options.quote, start);
+		} else {
+			this.pos = end + 1;
+			break;
+		}
+	}
+	return tmp.join(this.options.quote);
+};
+
+/**
+ * normalField: (1 - S(",\n"))^0
+ */
+CSVParser.prototype.normalField = function() {
+	var begin = this.pos;
+	var idelim = this.str.indexOf(this.options.delim, begin);
+	if (idelim < 0) {
+		idelim = this.endpos;
+	}
+	var irowdelim = this.str.indexOf(this.options.rowdelim, begin);
+	if (irowdelim < 0) {
+		irowdelim = this.endpos;
+	}
+	this.pos = Math.min(idelim, irowdelim);
+	return this.str.substring(begin, this.pos);
+};
+
+/**
+ * nextField: quotedField + normalField
+ */
+CSVParser.prototype.nextField = function() {
+	var tmp = this.quotedField();
+	if (tmp !== null) return tmp;
+	return this.normalField();
+};
+
+/**
+ * nextRow_0: ',' * nextField
+ */
+CSVParser.prototype.nextRow_0 = function() {
+	var mark = this.pos;
+	if (!this.next(this.options.delim)) { this.pos = mark; return null; }
+	var tmp = this.nextField();
+	if (tmp === null) { this.pos = mark; return null; }
+	return tmp;
+};
+
+/**
+ * nextRow: nextField * (',' * nextField)^0 * (P'\n' + -1)
+ *
+ * @return String[]
+ * @throws CSVSyntaxError
+ */
+CSVParser.prototype.nextRow = function() {
+	var ar = [];
+	var mark = this.pos;
+	var tmp = this.nextField();
+	if (tmp === null) { this.pos = mark; return null; }
+	ar.push(tmp);
+	tmp = this.nextRow_0();
+	while (tmp !== null) {
+		ar.push(tmp);
+		tmp = this.nextRow_0();
+	}
+	if (!(this.next(this.options.rowdelim) || !this.ahead())) {
+		throw new CSVSyntaxError('line ' + this.lineNo + ': ' + this.str.substring(Math.max(this.pos - 5, 0), this.pos + 5));
+		this.pos = mark; return null;
+	}
+	if (this.str.charAt(this.pos - 1) == '\n') {
+		this.lineNo++;
+	}
+	return ar;
+};
+
+/**
+ * @return boolean
+ */
+CSVParser.prototype.hasNext = function() {
+	return this.ahead();
+};
+
+CSV.CSVSyntaxError = CSVSyntaxError;
+CSV.CSVParser = CSVParser;
+
+/**
+ * @return String[] or null
+ */
+CSV.parseOne = function(str, options) {
+	var parser = new CSVParser(str, options);
+	if (parser.hasNext()) {
+		return parser.nextRow();
+	}
+	return null;
+};
+
+/**
+ * @return String[][]
+ */
+CSV.parse = function(str, options) {
+	var parser = new CSVParser(str, options);
+	var all = [];
+	while (parser.hasNext()) {
+		var ar = parser.nextRow();
+		all.push(ar);
+	}
+	return all;
+};
+
+/**
+ * @param rows String[][]
+ * @param colnames String[]
+ * @return Object[]
+ */
+CSV.bindColumns = function(rows, colnames) {
+	if (!colnames) {
+		colnames = rows.shift();
+	}
+	return rows.map(function(row) {
+		var obj = {};
+		for (var i = 0; i < row.length; i++) {
+			obj[colnames[i]] = row[i];
+		}
+		return obj;
+	});
+};
+
+/**
+ * https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/map
+ */
+if (!Array.prototype.map) {
+	Array.prototype.map = function(callback, thisArg) {
+		var T, A, k;
+		if (this === null) {
+			throw new TypeError(" this is null or not defined");
+		}
+		var O = Object(this);
+		var len = O.length >>> 0;
+		if ({}.toString.call(callback) != "[object Function]") {
+			throw new TypeError(callback + " is not a function");
+		}
+		if (thisArg) {
+			T = thisArg;
+		}
+		A = new Array(len);
+		k = 0;
+		while(k < len) {
+			var kValue, mappedValue;
+			if (k in O) {
+				kValue = O[ k ];
+				mappedValue = callback.call(T, kValue, k, O);
+				A[ k ] = mappedValue;
+			}
+			k++;
+		}
+		return A;
+	};
+}
+
+// exports
+if (typeof exports !== 'undefined') {
+	if (typeof module !== 'undefined' && module.exports) {
+		exports = module.exports = CSV;
+	}
+} else if (typeof define === 'function') {
+	define(function () {
+		return CSV;
+	});
+} else {
+	window.CSV = CSV;
+}
+
+})();
+;
+Assert.equalsIgnoreCase = function(actuall, expected, msg) {
+	if (actuall.toLowerCase() !== expected.toLowerCase()) {
+		msg = msg ? ': ' + msg : '';
+		Assert.fail(actuall + ' !=(ignore case) ' + expected + ' (expected)' + msg);
+	}
+};
+;
+(function() {
+
+function Combobox(elem) {
+	Assert.equalsIgnoreCase(elem.tagName, 'input', 'Combobox must be used with an input');
+	this.input = elem;
+
+	Assert.notEmpty(elem.value, 'You must fill input\'s value with CSV format value list');
+	var values = CSV.parseOne(elem.value);
+	elem.value = '';
+	var ul = document.createElement('ul');
+	for (var i = 0; i < values.length; i++) {
+		var li = document.createElement('li');
+		li.setAttribute('data-value', values[i]);
+		li.innerHTML = Strings.escapeHtml(values[i]);
+		ul.appendChild(li);
+	}
+	this.datalist = ul;
+}
+Combobox.prototype.showOptions = function() {
+	this.datalist.style.display = '';
+};
+Combobox.prototype.hideOptions = function() {
+	this.datalist.style.display = 'none';
+};
+Combobox.prototype.init = function() {
+	var this1 = this;
+	(function() { // create a container div and replace
+		var div = document.createElement('div');
+		div.className = 'flower-combobox';
+		var input = this1.input.cloneNode(false);
+		div.appendChild(input);
+		div.appendChild(this1.datalist);
+		this1.input.parentNode.replaceChild(div, this1.input);
+		this1.input = input;
+		this1.elem = div;
+	})();
+	this.hideOptions();
+	Flower.eventer.addEventListener(this.input, 'focus', function(e) {
+		this1.showOptions();
+	});
+	Flower.eventer.addEventListener(this.input, 'blur', function(e) {
+		setTimeout(function(){this1.hideOptions();}, 100); // delay, otherwise can't trigger click
+	});
+	Flower.eventer.addEventListener(this.datalist, 'click', function(e) {
+		e = e || window.event;
+		var target = e.target || e.srcElement;
+		if (target.tagName.toUpperCase() == 'LI') {
+			this1.input.value = target.getAttribute('data-value');
+		}
+		this1.hideOptions(); // in IE, click don't trigger blur
+	});
+
+	var ie = Flower.ie.version();
+	if (ie && ie < 7) {
+		for (var i = 0; i < this.datalist.children.length; i++) {
+			Flower.ie.hoverClass(this.datalist.children[i], 'flower-hover');
+		}
+	}
+};
+
+FlowerUI.Combobox = Combobox;
+
+})();
+;
+Strings.endsWith = function(str, suffix) {
+	return str.indexOf(suffix, str.length - suffix.length) !== -1;
+};
+;
+Assert.notPresent = function(obj, msg) {
+	if ((typeof obj !== 'undefined') && (obj !== null)) {
+		msg = msg ? ': ' + msg : '';
+		Assert.fail('object is present' + msg);
+	}
+};
+;
+Strings.removeEnd = function(str, suffix) {
+	if (this.endsWith(str, suffix)) {
+		return str.substring(0, str.length - suffix.length);
+	}
+	return str;
+};
+;
+Assert.isTrue = function(cond, msg) {
+	if (cond !== true) {
+		msg = msg ? ': ' + msg : '';
+		Assert.fail('condition ' + cond + ' is not true' + msg);
+	}
+};
+;
+(function() {
+
+/**
+ * 处理具有 data-name 或 data-class 的 element：
+ *
+ * 1. 如果有 data-class ，则值为 new class(element)
+ * 2. 否则值为此 element
+ *
+ * 然后将值用 data-name 保存到最近的具有 data-class 的祖先
+ *
+ * 也允许只有 data-class 但没有名字的匿名对象
+ */
+function compileElement(parentObj, element) {
+	var name = element.getAttribute('data-name');
+	var klass = element.getAttribute('data-class');
+	var obj = null;
+	if (klass) {
+		obj = eval('new ' + klass + '(element)'); // FIXME: eval
+	}
+	if (name && parentObj) {
+		obj = obj || element;
+		if (Strings.endsWith(name, '[]')) { // 数组
+			name = Strings.removeEnd(name, '[]');
+			Assert.present(parentObj[name], 'parentObj.' + name);
+			parentObj[name].push(obj);
+		} else {
+			Assert.notPresent(parentObj[name], 'name conflict: ' + name);
+			parentObj[name] = obj;
+		}
+	}
+	var childs = element.children;
+	var len = childs.length;
+	var nextParent = klass ? obj : parentObj;
+	for (var i = 0; i < len; i++) {
+		compileElement(nextParent, childs[i]);
+	}
+	if (klass && obj && typeof obj.init === 'function') {
+		obj.init(); // trigger init event
+	}
+	if (klass) {
+		return obj;
+	}
+}
+
+/**
+ * 编译一个具有 data-class 的 element（不一定有 data-name）
+ */
+function compileUI(element) {
+	Assert.isTrue(Flower.domer.hasAttribute(element, 'data-class'), 'element must have data-class attribute');
+	// Flower.assert.isFalse(Flower.domer.hasAttribute(element, 'data-name'), 'element must not have data-name attribute');
+	/*var rootObj = eval('new ' + element.getAttribute('data-class') + '(element)'); // FIXME: eval
+	for (var i = 0; i < element.children.length; i++) {
+		compileElement(rootObj, element.children[i]);
+	}
+	if (typeof rootObj.init === 'function') {
+		rootObj.init(); // trigger init event
+	}
+	return rootObj;*/
+	return compileElement(null, element);
+}
+
+function compileAll(element) {
+	var obj = {};
+	compileElement(obj, element || document.body);
+	return obj;
+}
+
+FlowerUI.compileAll = compileAll;
 
 })();
 ;
