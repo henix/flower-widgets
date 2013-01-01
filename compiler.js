@@ -19,8 +19,8 @@ function compileElement(parentObj, element) {
 	}
 	if (name && parentObj) {
 		obj = obj || element;
-		if (Flower.string.endsWith(name, '[]')) { // 数组
-			name = Flower.string.removeEnd(name, '[]');
+		if (Strings.endsWith(name, '[]')) { // 数组
+			name = Strings.removeEnd(name, '[]');
 			Assert.present(parentObj[name], 'parentObj.' + name);
 			parentObj[name].push(obj);
 		} else {

@@ -20,7 +20,7 @@ function genMatrixFilter(deg) {
 }
 
 Arrows.prototype.drawArrow = function(x1, y1, x2, y2, color) {
-	var ie = Flower.ieVersion();
+	var ie = Flower.ie.version();
 
 	var div = document.createElement('div');
 	div.className = 'flower-arrow-cont';
