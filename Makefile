@@ -4,8 +4,9 @@
 
 NAME=flowerui
 SRC=$(wildcard *.js)
+TESTHTM=$(patsubst %.rhtm,%.htm,$(wildcard test/*.rhtm))
 
-all: dist/$(NAME).js dist/$(NAME).css test/cards.htm
+all: dist/$(NAME).js dist/$(NAME).css $(TESTHTM)
 
 dist/$(NAME).js: $(NAME).js $(NAME).moddef $(SRC)
 	mkdir -p dist

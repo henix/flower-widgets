@@ -41,6 +41,7 @@ EditableP.prototype.init = function() {
 	});
 	this.p.innerHTML = this.text;
 	this.input.value = this.text;
+	this.cards.init();
 };
 
 FlowerUI.compileAll();
