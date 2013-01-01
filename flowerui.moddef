@@ -9,8 +9,15 @@ dir FlowerUI flower-widgets {
 	Renderer: renderer.js
 	Renderer -> ::Base.Assert.present
 
+	Cards: cards.js
+
 	Dialog: dialog.js dialog.css
 	Dialog -> ::Flower.eventer.addEventListener ::Flower.eventer.preventDefault ::Flower.domer
+
+	Combobox: combobox.js combobox.css
+	Combobox -> ::Base.Assert.equalsIgnoreCase ::Base.Assert.notEmpty
+	Combobox -> ::CSV
+	Combobox -> ::Flower.eventer.addEventListener ::Flower.ie.version ::Flower.ie.hoverClass
 
 	Arrows: arrows.js arrows.css
 	Arrows -> ::Base.ecma5.Array-map ::Flower.ieVersion ::Base.Assert.present ::Base.Assert.between ::Flower.domer

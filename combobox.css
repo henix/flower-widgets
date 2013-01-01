@@ -1,0 +1,21 @@
+.flower-combobox {
+	display: inline-block;
+	zoom: 1;
+	*display: inline;
+	vertical-align: top;
+}
+.flower-combobox ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	z-index: 10;
+}
+.flower-combobox li {
+	padding: 0.3em;
+	background-color: #eee;
+}
+.flower-combobox li:hover,
+.flower-combobox li.flower-hover /* for IE6 */ {
+	background-color: #ccc;
+	cursor: pointer;
+}

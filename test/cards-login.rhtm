@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>User Login Demo</title>
+</head>
+<body>
+
+<div data-name="page" data-class="Page">
+
+<div>
+<form data-name="loginForm">
+<p><label for="username">username: </label><input type="text" name="username" /></p>
+<p><label for="password">password: </label><input type="password" name="password" /></p>
+<p><input type="submit" value="submit" /></p>
+</form>
+</div>
+
+<div data-name="main" data-class="FlowerUI.Renderer">
+<p>Hello, {{username}}!</p>
+</div>
+
+</div>
+
+#inline Base.Precond
+#inline Flower.eventer.addEventListener
+#inline Flower.eventer.preventDefault
+#inline Flower.cookie
+#inline Flower.TimeUnit
+<script type="text/javascript" src="../dist/flowerui.js"></script>
+<script type="text/javascript" src="https://raw.github.com/janl/mustache.js/master/mustache.js"></script>
+
+<script type="text/javascript">
+var Flow = {};
+Flow.exec = function(dfa, start) {
+	var cur = start || 'start';
+	while (cur) {
+		cur = dfa[cur]();
+	}
+};
+</script>
+
+<script type="text/javascript">
+Flower.cookie.load();
+
+var $login = {
+	username: null,
+};
+
+var $flow = null;
+
+function Page(elem) {
+	this.loginForm = null;
+	this.main = null;
+	this.cards = new FlowerUI.Cards(elem);
+}
+Page.prototype.init = function() {
+	this.main.render_func = Mustache.render;
+	var this1 = this;
+	Flower.eventer.addEventListener(this.loginForm, 'submit', function(e) {
+		e = e || window.event;
+		try {
+			Precond.check(this1.loginForm.username.value, 'username is empty');
+			Precond.check(this1.loginForm.password.value, 'password is empty');
+			Flower.cookie.set('username', this1.loginForm.username.value, 10 * Flower.TimeUnit.MINUTES);
+			Flow.exec($flow);
+		} catch(e) {
+			if (e instanceof ArgumentError) {
+				alert(e.message);
+			} else throw e;
+		} finally {
+			Flower.eventer.preventDefault(e);
+		}
+	});
+	this.cards.afterFirstSwitch(1, function(elem) {
+		this1.main.repaint($login);
+	});
+	this.cards.init();
+};
+
+var $ = FlowerUI.compileAll();
+
+function checkLogin() {
+	var tmp = Flower.cookie.get('username');
+	if (tmp) {
+		$login.username = tmp;
+		return true;
+	}
+	return false;
+}
+
+$flow = {
+	checkLogin: function() {
+		if (checkLogin()) {
+			return 'main';
+		}
+		return 'showLoginForm';
+	},
+	showLoginForm: function() {
+		$.page.cards.switchTo(0);
+	},
+	main: function() {
+		$.page.cards.switchTo(1);
+	}
+};
+$flow.start = $flow.checkLogin;
+
+Flow.exec($flow);
+</script>
+
+</body>
+</html>

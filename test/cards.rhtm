@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Cards Test</title>
+</head>
+<body>
+
+<div data-class="EditableP" data-text="click to edit">
+<p data-name="p"></p>
+<input data-name="input" type="text" />
+</div>
+
+#inline Flower.eventer.addEventListener
+<script type="text/javascript" src="../dist/flowerui.js"></script>
+
+<script type="text/javascript">
+function EditableP(elem) {
+	this.p = null;
+	this.input = null;
+	this.cards = new FlowerUI.Cards(elem);
+	this.text = elem.getAttribute('data-text') || '';
+}
+EditableP.prototype.init = function() {
+	var this1 = this;
+	Flower.eventer.addEventListener(this.p, 'click', function(ev) {
+		this1.cards.switchTo(1);
+	});
+	function onblur(ev) {
+		this1.text = this1.input.value;
+		this1.p.innerHTML = this1.text;
+		this1.cards.switchTo(0);
+	}
+	Flower.eventer.addEventListener(this.input, 'blur', onblur);
+	Flower.eventer.addEventListener(this.input, 'keyup', function(e) {
+		e = e || window.event;
+		if (e.keyCode == 13) {
+			onblur();
+		}
+	});
+	this.p.innerHTML = this.text;
+	this.input.value = this.text;
+	this.cards.init();
+};
+
+FlowerUI.compileAll();
+</script>
+
+</body>
+</html>
