@@ -25,12 +25,12 @@ function EditableP(elem) {
 EditableP.prototype.init = function() {
 	var this1 = this;
 	Flower.eventer.addEventListener(this.p, 'click', function(ev) {
-		this1.cards.next();
+		this1.cards.switchTo(1);
 	});
 	function onblur(ev) {
 		this1.text = this1.input.value;
 		this1.p.innerHTML = this1.text;
-		this1.cards.previous();
+		this1.cards.switchTo(0);
 	}
 	Flower.eventer.addEventListener(this.input, 'blur', onblur);
 	Flower.eventer.addEventListener(this.input, 'keyup', function(e) {
