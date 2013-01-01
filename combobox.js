@@ -10,7 +10,8 @@ function Combobox(elem) {
 	var ul = document.createElement('ul');
 	for (var i = 0; i < values.length; i++) {
 		var li = document.createElement('li');
-		li.innerHTML = values[i];
+		li.setAttribute('data-value', values[i]);
+		li.innerHTML = Strings.escapeHtml(values[i]);
 		ul.appendChild(li);
 	}
 	this.datalist = ul;
@@ -44,7 +45,7 @@ Combobox.prototype.init = function() {
 		e = e || window.event;
 		var target = e.target || e.srcElement;
 		if (target.tagName.toUpperCase() == 'LI') {
-			this1.input.value = target.innerHTML;
+			this1.input.value = target.getAttribute('data-value');
 		}
 		this1.hideOptions(); // in IE, click don't trigger blur
 	});

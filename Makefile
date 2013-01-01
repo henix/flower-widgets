@@ -20,4 +20,4 @@ dist/$(NAME).css: dialog.css arrows.css
 	cat $^ > $@
 
 clean:
-	rm -f dist/$(NAME).js dist/$(NAME).css
+	rm -f dist/$(NAME).js dist/$(NAME).css $(TESTHTM)

@@ -2,7 +2,7 @@ dir FlowerUI flower-widgets {
 	*before_all: before_all.js
 
 	compiler:
-	compiler -> ::Base.Assert.present ::Base.Assert.notPresent ::Flower.string ::Base.Assert.isTrue ::Flower.domer
+	compiler -> ::Base.Assert.present ::Base.Assert.notPresent ::Base.Strings.endsWith ::Base.Strings.removeEnd ::Base.Assert.isTrue ::Flower.domer
 
 	Template: template.js
 
@@ -15,10 +15,10 @@ dir FlowerUI flower-widgets {
 	Dialog -> ::Flower.eventer.addEventListener ::Flower.eventer.preventDefault ::Flower.domer
 
 	Combobox: combobox.js combobox.css
-	Combobox -> ::Base.Assert.equalsIgnoreCase ::Base.Assert.notEmpty
+	Combobox -> ::Base.Assert.equalsIgnoreCase ::Base.Assert.notEmpty ::Base.Strings.escapeHtml
 	Combobox -> ::CSV
 	Combobox -> ::Flower.eventer.addEventListener ::Flower.ie.version ::Flower.ie.hoverClass
 
 	Arrows: arrows.js arrows.css
-	Arrows -> ::Base.ecma5.Array-map ::Flower.ieVersion ::Base.Assert.present ::Base.Assert.between ::Flower.domer
+	Arrows -> ::Base.ecma5.Array-map ::Flower.ie.version ::Base.Assert.present ::Base.Assert.between ::Flower.domer
 }
