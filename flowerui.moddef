@@ -2,7 +2,9 @@ dir FlowerUI flower-widgets {
 	*before_all: before_all.js
 
 	compiler:
-	compiler -> ::Base.Assert.present ::Base.Assert.notPresent ::Base.Strings.endsWith ::Base.Strings.removeEnd ::Base.Assert.isTrue ::Flower.domer
+	compiler -> ::Base.Assert.present ::Base.Assert.notPresent ::Base.Assert.isTrue
+	compiler -> ::Base.Strings.endsWith ::Base.Strings.removeEnd
+	compiler -> ::Flower.domer
 
 	Template: template.js
 

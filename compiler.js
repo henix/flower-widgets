@@ -1,5 +1,15 @@
 (function() {
 
+function newInstance(klass, arg0) {
+	var names = klass.split('.');
+	var f = window;
+	for (var i = 0; i < names.length; i++) {
+		f = f[names[i]];
+		Assert.present(f, function() { return names.slice(0, i + 1).join('.'); });
+	}
+	return new f(arg0);
+}
+
 /**
  * 处理具有 data-name 或 data-class 的 element：
  *
@@ -15,7 +25,8 @@ function compileElement(parentObj, element) {
 	var klass = element.getAttribute('data-class');
 	var obj = null;
 	if (klass) {
-		obj = eval('new ' + klass + '(element)'); // FIXME: eval
+		// obj = eval('new ' + klass + '(element)'); // eval
+		obj = newInstance(klass, element);
 	}
 	if (name && parentObj) {
 		obj = obj || element;
