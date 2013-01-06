@@ -48,26 +48,7 @@ function compileElement(parentObj, element) {
 	if (klass && obj && typeof obj.init === 'function') {
 		obj.init(); // trigger init event
 	}
-	if (klass) {
-		return obj;
-	}
-}
-
-/**
- * 编译一个具有 data-class 的 element（不一定有 data-name）
- */
-function compileUI(element) {
-	Assert.isTrue(Flower.domer.hasAttribute(element, 'data-class'), 'element must have data-class attribute');
-	// Flower.assert.isFalse(Flower.domer.hasAttribute(element, 'data-name'), 'element must not have data-name attribute');
-	/*var rootObj = eval('new ' + element.getAttribute('data-class') + '(element)'); // FIXME: eval
-	for (var i = 0; i < element.children.length; i++) {
-		compileElement(rootObj, element.children[i]);
-	}
-	if (typeof rootObj.init === 'function') {
-		rootObj.init(); // trigger init event
-	}
-	return rootObj;*/
-	return compileElement(null, element);
+	return obj;
 }
 
 function compileAll(element) {
@@ -76,6 +57,7 @@ function compileAll(element) {
 	return obj;
 }
 
+FlowerUI.compileElement = compileElement;
 FlowerUI.compileAll = compileAll;
 
 })();
