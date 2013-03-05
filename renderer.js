@@ -8,9 +8,18 @@ function Renderer(elem) {
 
 Renderer.prototype.repaint = function(data) {
 	Assert.present(this.render_func, 'must set render_func before repaint');
-	var div = document.createElement('div');
+	var tagName = this.elem.tagName.toLowerCase();
+	var parentTag;
+	if (tagName == 'tr') {
+		parentTag = 'table';
+	} else {
+		parentTag = 'div';
+	}
+	var div = document.createElement(parentTag);
 	div.innerHTML = this.render_func(this.tmpl, data);
-	var child = div.removeChild(div.children[0]);
+	var child = div.getElementsByTagName(tagName)[0];
+	Assert.present(child, 'Can\'t find tag in render result: ' + tagName);
+	child.parentNode.removeChild(child);
 	this.elem.parentNode.replaceChild(child, this.elem);
 	this.elem = child;
 };
